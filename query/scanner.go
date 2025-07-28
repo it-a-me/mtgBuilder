@@ -25,6 +25,21 @@ const (
 	RHS
 )
 
+func (t TokenType) String() string {
+	switch t {
+	case Bang:
+		return "Bang"
+	case Comparison:
+		return "Comparison"
+	case LHS:
+		return "Left Hand Side"
+	case RHS:
+		return "Right Hand Side"
+	default:
+		panic(fmt.Sprintf("Invalid TokenType: %d", t))
+	}
+}
+
 func scan(queryLine string) ([]Token, error) {
 	var tokens []Token
 	runes := []rune(queryLine)
