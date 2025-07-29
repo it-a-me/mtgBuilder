@@ -13,7 +13,6 @@ import (
 	"net/rpc"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -127,25 +126,20 @@ func decode(path string) ([]card.Card, error) {
 	return cards, nil
 }
 
-func clean(s string) string {
-	killParens := regexp.MustCompile(`\(.*\)`)
-	return killParens.ReplaceAllString(s, "")
-}
-
 func oracleCmd(args []string) {
 	flags := flag.NewFlagSet("search", flag.ExitOnError)
 	flags.Usage = func() {
-		fmt.Fprintf(flags.Output(), "%s: search serialized cards by a regex of oracle text\n", flags.Name())
+		fmt.Fprintf(flags.Output(), "%s: search serialized cards\n", flags.Name())
 		flags.PrintDefaults()
 	}
 	flags.Parse(args)
 	if flags.NArg() != 2 {
-		fmt.Fprintf(flags.Output(), "benchDecode expects arguments in form `%s benchDecode dst.bin 'goblin'`", name)
+		fmt.Fprintf(flags.Output(), "benchDecode expects arguments in form `%s benchDecode dst.bin 'o:goblin'`", name)
 		flags.Usage()
 		os.Exit(1)
 	}
 
-	query, err := regexp.Compile(flags.Arg(1))
+	queries, err := query.Parse(flags.Arg(1), true)
 	if err != nil {
 		log.Fatalf("invalid regular expression /%s/: %s", flags.Arg(1), err)
 	}
@@ -153,25 +147,27 @@ func oracleCmd(args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	slog.Info("Parsed Queries", "queries", queries)
+	start := time.Now()
 	var matches []int
 	for i, c := range cards {
-		if c.Legalities["commander"] != "legal" {
-			continue
-		}
-		for _, text := range c.GetOracleText() {
-			text = clean(text)
-			if query.MatchString(strings.ToLower(text)) {
-				matches = append(matches, i)
+		matched := true
+		for _, q := range queries {
+			if !q.Matches(&c) {
+				matched = false
 				break
 			}
 		}
+		if matched {
+			matches = append(matches, i)
+		}
 	}
 	slices.SortFunc(matches, func(a, b int) int { return cmp.Compare(cards[a].Name, cards[b].Name) })
+	elapsed := time.Since(start)
+	log.Printf("searched %d cards in %s", len(cards), elapsed.String())
 
-	const MAX = 7
-	if len(matches) > MAX {
-		fmt.Printf("Showing %d/%d\n", MAX, len(matches))
-	}
+	const MAX = 500
+	fmt.Printf("Showing %d/%d\n", min(MAX, len(matches)), len(matches))
 	for i := range min(len(matches), MAX) {
 		fmt.Printf("\t%s\n%s\n\n", cards[matches[i]].Name, strings.Join(cards[matches[i]].GetOracleText(), "\n"))
 		// fmt.Printf("%d.\t%s\n", i, cards[matches[i]].Name)
@@ -211,25 +207,26 @@ type Server struct {
 }
 
 func (s *Server) Query(req string, ret *[]card.Card) error {
-	start := time.Now()
+	// start := time.Now()
 	slog.Info("Recieved Request", "query", req, "cards", len(s.cards))
 
-	re, err := query.NewRegexMatcher(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// q := query.OracleText{Re: re}
-	*ret = (*ret)[:0]
-	for _, c := range s.cards {
-		if slices.ContainsFunc(c.GetOracleText(), func(s string) bool { return re.MatchString(strings.ToLower(s)) }) {
-			// if q.Matches(&c) {
-			*ret = append((*ret), c)
-		}
-	}
-	elapsed := time.Since(start)
-	slog.Debug("handled request", "query", req, "matches", len(*ret), "took", elapsed.String())
-	return nil
+	panic("Unimplemented")
+	// re, err := query.NewRegexMatcher(req)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	//
+	// // q := query.OracleText{Re: re}
+	// *ret = (*ret)[:0]
+	// for _, c := range s.cards {
+	// 	if slices.ContainsFunc(c.GetOracleText(), func(s string) bool { return re.MatchString(strings.ToLower(s)) }) {
+	// 		// if q.Matches(&c) {
+	// 		*ret = append((*ret), c)
+	// 	}
+	// }
+	// elapsed := time.Since(start)
+	// slog.Debug("handled request", "query", req, "matches", len(*ret), "took", elapsed.String())
+	// return nil
 }
 
 func queryCmd(args []string) {
@@ -271,7 +268,7 @@ var subcommands = []string{"serialize", "benchDecode", "search", "fetch", "serve
 
 func main() {
 	log.SetFlags(log.Ltime)
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
 	flags := flag.NewFlagSet(name, flag.ExitOnError)
 	recordTime := flags.Bool("time", false, "log the time to execute the command")

@@ -6,8 +6,6 @@ import (
 
 type Legalities map[string]string
 
-type Colors []string
-
 type CoreFields struct {
 	// This card’s Arena ID, if any. A large percentage of cards are not available on Arena and do not have this ID.
 	//
@@ -519,6 +517,7 @@ type Preview struct {
 	// This value may be nil
 	Source *string `json:"source,omitempty"`
 }
+
 type Prices struct {
 	Usd       *string `json:"usd"`
 	UsdFoil   *string `json:"usd_foil"`
