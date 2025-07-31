@@ -124,11 +124,11 @@ var (
 )
 
 func handleUnquotedLiteral(runes []rune) (consumed int, err error) {
-	if !unicode.IsLetter(runes[0]) && !unicode.IsDigit(runes[0]) {
+	if !unicode.IsLetter(runes[0]) && !unicode.IsDigit(runes[0]) && runes[0] != '_' {
 		return -1, fmt.Errorf("%w: character '%c'", ErrUnexpectedRune, runes[0])
 	}
 	for i, r := range runes {
-		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '_' {
 			return i, nil
 		}
 	}
