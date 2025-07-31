@@ -43,6 +43,7 @@ var DefaultFilter = Intersection{[]Query{
 	Negation{Type{"plane"}},
 	Negation{Type{"scheme"}},
 	Negation{Type{"phenomenon"}},
+	Negation{Type{"token"}},
 	Negation{SetType{"memorabilia"}},
 	Negation{SetType{"minigame"}},
 	Negation{Set{"unk"}},
