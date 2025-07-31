@@ -10,7 +10,7 @@ import (
 	"mtgBuilder/card"
 )
 
-//go:generate stringer -type=relationship
+//go:generate go tool stringer -type=relationship
 type relationship int8
 
 const (
