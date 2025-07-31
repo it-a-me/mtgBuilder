@@ -54,7 +54,7 @@ func deserializeCards(path string) ([]card.Card, error) {
 
 	w, err := gzip.NewReader(f)
 	if err != nil {
-		panic(fmt.Errorf("compression level should always be valid: %w", err))
+		panic(fmt.Errorf("failed to read %s: %s", path, err))
 	}
 	defer w.Close()
 
@@ -80,14 +80,20 @@ var subcommands = map[string]struct {
 		"Fetch oracle cards.json",
 		"cards.bin",
 		func(flags *flag.FlagSet, args []string) {
+			jsonPath := flags.String("jsonPath", "", "path the a pre-fetched cards.json")
 			flags.Parse(args)
 			const NARGS = 1
 			if flags.NArg() != NARGS {
 				fmt.Fprintf(flags.Output(), "please supply exactly %d arguments", NARGS)
 				flags.Usage()
 			}
-
-			js, err := fetch.GetOracleCardsJSON()
+			var js []byte
+			var err error
+			if *jsonPath == "" {
+				js, err = fetch.GetOracleCardsJSON()
+			} else {
+				js, err = os.ReadFile(*jsonPath)
+			}
 			if err != nil {
 				log.Fatal(err)
 			}
