@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"log/slog"
 
 	"mtgBuilder/card"
 )
@@ -23,6 +24,7 @@ func (m Manavalue) Matches(c *card.Card) bool {
 	if c.Cmc == nil {
 		return false
 	}
+	slog.Debug("Manavalue Matching", "value", m.Value, "cmc", *c.Cmc, "name", c.Name)
 	switch m.Relationship {
 	case Less:
 		return m.Value < *c.Cmc

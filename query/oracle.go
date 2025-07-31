@@ -96,3 +96,11 @@ type Keyword struct {
 }
 
 var StripParens = regexp.MustCompile(`\(.*?\)`)
+
+type OracleID struct {
+	ID string
+}
+
+func (o OracleID) Matches(c *card.Card) bool {
+	return c.OracleID != nil && c.OracleID.String() == o.ID
+}

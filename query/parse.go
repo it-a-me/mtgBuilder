@@ -48,7 +48,7 @@ var DefaultFilter = Intersection{[]Query{
 	Negation{Set{"unk"}},
 }}
 
-func Parse(queryline string, withDefault bool) ([]Query, error) {
+func Parse(queryline string, withDefault bool) (Query, error) {
 	runes := []rune(queryline)
 	tokens, err := scan(queryline)
 	if err != nil {
@@ -70,5 +70,5 @@ func Parse(queryline string, withDefault bool) ([]Query, error) {
 	if withDefault {
 		queries = append(queries, DefaultFilter)
 	}
-	return queries, nil
+	return Intersection{queries}, nil
 }

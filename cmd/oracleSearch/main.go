@@ -132,14 +132,17 @@ func oracleCmd(args []string) {
 		fmt.Fprintf(flags.Output(), "%s: search serialized cards\n", flags.Name())
 		flags.PrintDefaults()
 	}
+	maxArg := flags.Uint("max", 5, "set the max amount of cards to print")
+	short := flags.Bool("short", false, "show short output")
 	flags.Parse(args)
+	printMax := int(*maxArg)
 	if flags.NArg() != 2 {
 		fmt.Fprintf(flags.Output(), "benchDecode expects arguments in form `%s benchDecode dst.bin 'o:goblin'`", name)
 		flags.Usage()
 		os.Exit(1)
 	}
 
-	queries, err := query.Parse(flags.Arg(1), true)
+	q, err := query.Parse(flags.Arg(1), true)
 	if err != nil {
 		log.Fatalf("invalid regular expression /%s/: %s", flags.Arg(1), err)
 	}
@@ -147,18 +150,11 @@ func oracleCmd(args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	slog.Info("Parsed Queries", "queries", queries)
+	slog.Info("Parsed Queries", "queries", q)
 	start := time.Now()
 	var matches []int
 	for i, c := range cards {
-		matched := true
-		for _, q := range queries {
-			if !q.Matches(&c) {
-				matched = false
-				break
-			}
-		}
-		if matched {
+		if q.Matches(&c) {
 			matches = append(matches, i)
 		}
 	}
@@ -166,11 +162,42 @@ func oracleCmd(args []string) {
 	elapsed := time.Since(start)
 	log.Printf("searched %d cards in %s", len(cards), elapsed.String())
 
-	const MAX = 500
-	fmt.Printf("Showing %d/%d\n", min(MAX, len(matches)), len(matches))
-	for i := range min(len(matches), MAX) {
-		fmt.Printf("\t%s\n%s\n\n", cards[matches[i]].Name, strings.Join(cards[matches[i]].GetOracleText(), "\n"))
-		// fmt.Printf("%d.\t%s\n", i, cards[matches[i]].Name)
+	fmt.Printf("Showing %d/%d\n", min(printMax, len(matches)), len(matches))
+	for i := range min(len(matches), printMax) {
+		if *short {
+			fmt.Printf("%d.\t%s\n", i, cards[matches[i]].Name)
+		} else {
+			fmt.Printf("\t%s -- %s\n%s\n\n", cards[matches[i]].Name, cards[matches[i]].OracleID, strings.Join(cards[matches[i]].GetOracleText(), "\n"))
+		}
+	}
+}
+
+func dumpCmd(args []string) {
+	flags := flag.NewFlagSet("dump", flag.ExitOnError)
+	flags.Usage = func() {
+		fmt.Fprintf(flags.Output(), "%s: dump card json based on oracle id\n", flags.Name())
+		flags.PrintDefaults()
+	}
+	flags.Parse(args)
+	if flags.NArg() != 2 {
+		fmt.Fprintf(flags.Output(), "dump expects arguments in form `%s dump cards.bin '75336d52-5278-4e98-9875-b3ac8b91bfe2'`\n", name)
+		flags.Usage()
+		os.Exit(1)
+	}
+	cards, err := decode(flags.Arg(0))
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := query.OracleID{ID: strings.ToLower(flags.Arg(1))}
+	for _, c := range cards {
+		if q.Matches(&c) {
+			j, err := json.MarshalIndent(c, "", "  ")
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(string(j))
+			return
+		}
 	}
 }
 
@@ -264,11 +291,11 @@ func queryCmd(args []string) {
 	}
 }
 
-var subcommands = []string{"serialize", "benchDecode", "search", "fetch", "serve", "query"}
+var subcommands = []string{"serialize", "benchDecode", "search", "fetch", "serve", "query", "dump"}
 
 func main() {
 	log.SetFlags(log.Ltime)
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})))
 
 	flags := flag.NewFlagSet(name, flag.ExitOnError)
 	recordTime := flags.Bool("time", false, "log the time to execute the command")
@@ -299,6 +326,8 @@ func main() {
 		serveCmd(flags.Args()[1:])
 	case "query":
 		queryCmd(flags.Args()[1:])
+	case "dump":
+		dumpCmd(flags.Args()[1:])
 	default:
 		fmt.Fprintf(flags.Output(), "unknown command '%s, subcommands: [%s]\n\n", flags.Arg(0), strings.Join(subcommands, ", "))
 		flags.Usage()

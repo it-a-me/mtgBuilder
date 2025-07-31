@@ -10,17 +10,22 @@ import (
 	"mtgBuilder/card"
 )
 
+//go:generate stringer -type=relationship
 type relationship int8
 
 const (
 	Invalid relationship = iota
-	Less                 = iota
+	Less
 	LessEqual
 	Equal
 	GreaterEqual
 	Greater
 	Colon
 )
+
+func (r relationship) MarshalText() ([]byte, error) {
+	return []byte(r.String()), nil
+}
 
 type Inequality struct {
 	Left         string
@@ -51,17 +56,22 @@ func parseRelationship(inner string) (relationship, error) {
 var ErrInvalidBang = errors.New("invalid '!'")
 
 var fieldAliases = map[string]string{
-	"c":   "color",
-	"id":  "identity",
-	"ci":  "identity",
-	"t":   "type",
-	"o":   "oracle",
-	"fo":  "fulloracle",
-	"kw":  "keyword",
-	"m":   "mana",
-	"mv":  "manavalue",
-	"cmc": "manavalue",
-	"st":  "set_type",
+	"c":     "color",
+	"id":    "identity",
+	"ci":    "identity",
+	"t":     "type",
+	"o":     "oracle",
+	"fo":    "fulloracle",
+	"kw":    "keyword",
+	"m":     "mana",
+	"mv":    "manavalue",
+	"cmc":   "manavalue",
+	"st":    "set_type",
+	"f":     "format",
+	"legal": "format",
+	"p":     "power",
+	"pow":   "power",
+	"tou":   "toughness",
 }
 
 var ErrInvalidColor = errors.New("invalid color")
@@ -275,13 +285,78 @@ func parseNameExact(ineq Inequality) (Query, error) {
 	return NameExact{val}, nil
 }
 
+func parseFormat(ineq Inequality) (Query, error) {
+	if ineq.Relationship != Equal && ineq.Relationship != Colon {
+		return nil, fmt.Errorf("%w: unable to compare %s with %+v", ErrInvalidRelationship, ineq.Left, ineq.Relationship)
+	}
+	val := strings.ToLower(ineq.Right)
+	if stripped, ok := stripQuotes(ineq.Right); ok {
+		val = stripped
+	}
+	if expanded, exists := formatAliases[val]; exists {
+		val = expanded
+	}
+	switch ineq.Left {
+	case "format":
+		return Format{val, "legal"}, nil
+	case "banned":
+		return Format{val, "banned"}, nil
+	case "restricted":
+		return Format{val, "restricted"}, nil
+	}
+	panic(fmt.Sprintf("invalid format: %#v", ineq))
+}
+
+func parsePower(ineq Inequality) (Query, error) {
+	val := ineq.Right
+	if stripped, ok := stripQuotes(ineq.Right); ok {
+		val = stripped
+	}
+	var f float32
+	if val != "*" && val != "X" {
+		f64, err := strconv.ParseFloat(val, 32)
+		if err != nil {
+			return nil, err
+		}
+		f = float32(f64)
+	}
+	return Power{ineq.Relationship, f}, nil
+}
+
+func parseToughness(ineq Inequality) (Query, error) {
+	val := ineq.Right
+	if stripped, ok := stripQuotes(ineq.Right); ok {
+		val = stripped
+	}
+	var f float32
+	if val != "*" && val != "X" {
+		f64, err := strconv.ParseFloat(val, 32)
+		if err != nil {
+			return nil, err
+		}
+		f = float32(f64)
+	}
+	return Toughness{ineq.Relationship, f}, nil
+}
+
+func parseOracleID(ineq Inequality) (Query, error) {
+	if ineq.Relationship != Equal && ineq.Relationship != Colon {
+		return nil, fmt.Errorf("%w: unable to compare %s with %+v", ErrInvalidRelationship, ineq.Left, ineq.Relationship)
+	}
+	val := ineq.Right
+	if stripped, ok := stripQuotes(ineq.Right); ok {
+		val = stripped
+	}
+	return OracleID{val}, nil
+}
+
 var ErrUnknownField = errors.New("unknown field")
 
 func parseInequality(ineq Inequality) (Query, error) {
 	if ineq.Relationship == Invalid {
 		panic(ineq)
 	}
-	field := ineq.Left
+	field := strings.ToLower(ineq.Left)
 	if expanded, exists := fieldAliases[field]; exists {
 		field = expanded
 	}
@@ -310,6 +385,15 @@ func parseInequality(ineq Inequality) (Query, error) {
 		return parseSet(ineq)
 	case "set_type":
 		return parseSetType(ineq)
+	case "format", "banned", "restricted":
+		ineq.Left = field
+		return parseFormat(ineq)
+	case "power":
+		return parsePower(ineq)
+	case "toughness":
+		return parseToughness(ineq)
+	case "oracle_id":
+		return parseOracleID(ineq)
 	}
 	return nil, fmt.Errorf("%w: '%s'", ErrUnknownField, field)
 }
