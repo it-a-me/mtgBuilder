@@ -33,7 +33,7 @@ func init() {
 	}
 }
 
-func TestUnmarshal(t *testing.T) {
+func TestUnmarshalNissa(t *testing.T) {
 	want := card.Card{
 		CoreFields: card.CoreFields{
 			ArenaID:           nil,
@@ -212,6 +212,13 @@ func TestUnmarshal(t *testing.T) {
 	}
 }
 
+func TestReflectAll(t *testing.T) {
+	if !t.Run("Layout", ReflectLayout) {
+		return
+	}
+	t.Run("Layout", ReflectAll)
+}
+
 func ReflectLayout(t *testing.T) {
 	cards := []string{"double_faced.json", "flip.json", "mdf.json", "nissa.json", "reversible.json", "split.json"}
 	for _, c := range cards {
@@ -253,13 +260,6 @@ func TestUnmarshalAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to unmarshal all cards: %s", err)
 	}
-}
-
-func TestReflectAll(t *testing.T) {
-	if !t.Run("Layout", ReflectLayout) {
-		return
-	}
-	t.Run("Layout", ReflectAll)
 }
 
 func ReflectAll(t *testing.T) {
