@@ -54,7 +54,7 @@ export default class CardQuery {
     throw "unreachable";
   }
 
-  async getCard(cardIndex: number): Promise<object> {
+  async getCard(cardIndex: number) {
     // @ts-expect-error untyped value
     const res = globalThis.GO_cardQuery.getCard(cardIndex)
     if (res instanceof (Error)) {

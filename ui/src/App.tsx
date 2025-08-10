@@ -1,12 +1,25 @@
 import { Menubar } from "@/components/ui/menubar";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import * as Comlink from "comlink"
+import type CardQuery from "./workers/cardQuery";
 import react from "react";
 
-function CardSearch({ setCard: setCardUrl }: { setCard: react.Dispatch<react.SetStateAction<null>> }) {
+function CardSearch({ cardQuery, setCardUrl }: { cardQuery: Comlink.Remote<CardQuery>, setCardUrl: react.Dispatch<react.SetStateAction<string | null>> }) {
   const searchRef = react.useRef<HTMLInputElement>(null)
-  function handleSubmit(e: react.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: react.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const query = searchRef.current?.value
+    if (query == null) {
+      alert("query null")
+      return
+    }
+    const cards = await cardQuery.queryCards(query)
+    if (cards.length > 0) {
+      setCardUrl(await cardQuery.getCard(cards[0]).then(c => c.image_uris.normal))
+    } else {
+      setCardUrl(null)
+    }
   }
   return (
     <>
@@ -20,24 +33,24 @@ function CardSearch({ setCard: setCardUrl }: { setCard: react.Dispatch<react.Set
   );
 }
 
-function TitleBar({ setCard: setCardUrl }: { setCard: react.Dispatch<react.SetStateAction<null>> }) {
+function TitleBar({ cardQuery, setCardUrl }: { cardQuery: Comlink.Remote<CardQuery>, setCardUrl: react.Dispatch<react.SetStateAction<string | null>> }) {
   return (
     <>
       <Menubar>
         <Button asChild>
           <a href="/">MtgBuilder</a>
         </Button>
-        <CardSearch setCard={setCardUrl} />
+        <CardSearch cardQuery={cardQuery} setCardUrl={setCardUrl} />
       </Menubar >
     </>
   );
 }
 
-function App() {
-  const [cardUrl, setCardUrl] = react.useState(null)
+function App({ cardQuery }: { cardQuery: Comlink.Remote<CardQuery> }) {
+  const [cardUrl, setCardUrl] = react.useState<string | null>(null)
   return (
     <>
-      <TitleBar setCard={setCardUrl} />
+      <TitleBar cardQuery={cardQuery} setCardUrl={setCardUrl} />
       {
         cardUrl != null && <img src={cardUrl} />
       }
