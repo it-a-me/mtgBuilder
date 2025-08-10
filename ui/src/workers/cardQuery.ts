@@ -9,7 +9,7 @@ export default class CardQuery {
     //@ts-expect-error untyped wasm_exec
     const go = new Go();
     //@ts-expect-error untyped globalThis
-    globalThis.GO_cardQuery = WebAssembly.instantiateStreaming(fetch("/wasmlib.wasm"), go.importObject).then((result) => {
+    globalThis.GO_cardQuery = WebAssembly.instantiateStreaming(fetch(new URL("/wasmlib.wasm", import.meta.url)), go.importObject).then((result) => {
       go.run(result.instance);
     });
     //@ts-expect-error untyped globalThis

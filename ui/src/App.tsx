@@ -58,7 +58,7 @@ function App({ cardQuery }: { cardQuery: Comlink.Remote<CardQuery> }) {
         </div>
         <div className="flex flex-wrap justify-center" >
           {
-            cardUrls.map(url => <img className="w-80 p-1" src={url} />)
+            cardUrls.map(url => <img key={url} className="w-80 p-1" src={url} />)
           }
         </div>
       </div>

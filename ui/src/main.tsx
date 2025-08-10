@@ -9,7 +9,7 @@ const w = new Worker(new URL("./workers/cardQuery", import.meta.url), { type: "m
 const cardQuery = Comlink.wrap<CardQuery>(w);
 
 (async () => {
-  const cardsJson = await fetch("/cards.json").then(r => r.text())
+  const cardsJson = await fetch(new URL("/cards.json", import.meta.url)).then(r => r.text())
   console.log("fetched cards")
   await cardQuery.feedCards(cardsJson)
   console.log("fed cards")
@@ -18,6 +18,6 @@ const cardQuery = Comlink.wrap<CardQuery>(w);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-      <App cardQuery={cardQuery} />
+    <App cardQuery={cardQuery} />
   </StrictMode>,
 )
