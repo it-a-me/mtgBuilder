@@ -24,6 +24,10 @@ build: download-deps fetch-cards build-wasm
   deno run build
 
 [working-directory: 'ui']
+build-gh: download-deps fetch-cards build-wasm
+  deno run build-gh
+
+[working-directory: 'ui']
 run-dev: download-deps fetch-cards build-wasm
   deno run dev || true
 
