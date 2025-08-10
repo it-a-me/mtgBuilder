@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"slices"
 	"syscall/js"
+	"time"
 
 	"mtgBuilder/card"
 	"mtgBuilder/query"
@@ -31,13 +33,18 @@ func CheckArgs(args []js.Value, expected []js.Type) error {
 var cards []card.Card
 
 func feedCards(_ js.Value, args []js.Value) any {
+	log.Println("feeding cards")
 	if err := CheckArgs(args, []js.Type{js.TypeString}); err != nil {
 		return NewError(err)
 	}
+	
+	start := time.Now()
+
 	var c []card.Card
 	if err := json.Unmarshal([]byte(args[0].String()), &c); err != nil {
 		return NewError(err)
 	}
+	log.Printf("parsed cards.json in %s", time.Since(start).String())
 	cards = c
 	return nil
 }
@@ -104,5 +111,6 @@ func main() {
 		"getCard":    js.FuncOf(getCard),
 	}
 	g.Set(exportName, exports)
+	log.Printf("exported:\n%+v", exports)
 	<-make(chan struct{})
 }

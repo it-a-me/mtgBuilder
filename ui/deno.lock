@@ -12,6 +12,7 @@
     "npm:@vitejs/plugin-react@^4.6.0": "4.7.0_vite@7.0.6__picomatch@4.0.3_@babel+core@7.28.0_@types+node@24.2.0",
     "npm:class-variance-authority@~0.7.1": "0.7.1",
     "npm:clsx@^2.1.1": "2.1.1",
+    "npm:comlink@^4.4.2": "4.4.2",
     "npm:eslint-plugin-react-hooks@^5.2.0": "5.2.0_eslint@9.32.0",
     "npm:eslint-plugin-react-refresh@~0.4.20": "0.4.20_eslint@9.32.0",
     "npm:eslint@^9.30.1": "9.32.0",
@@ -1345,6 +1346,9 @@
     "color-name@1.1.4": {
       "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA=="
     },
+    "comlink@4.4.2": {
+      "integrity": "sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g=="
+    },
     "concat-map@0.0.1": {
       "integrity": "sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg=="
     },
@@ -2199,6 +2203,7 @@
         "npm:@vitejs/plugin-react@^4.6.0",
         "npm:class-variance-authority@~0.7.1",
         "npm:clsx@^2.1.1",
+        "npm:comlink@^4.4.2",
         "npm:eslint-plugin-react-hooks@^5.2.0",
         "npm:eslint-plugin-react-refresh@~0.4.20",
         "npm:eslint@^9.30.1",
