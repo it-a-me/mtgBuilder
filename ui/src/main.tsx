@@ -18,6 +18,6 @@ const cardQuery = Comlink.wrap<CardQuery>(w);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App cardQuery={cardQuery}/>
+      <App cardQuery={cardQuery} />
   </StrictMode>,
 )

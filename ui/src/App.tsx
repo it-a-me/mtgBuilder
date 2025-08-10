@@ -19,14 +19,14 @@ function CardSearch({ cardQuery, setCardUrls }: { cardQuery: Comlink.Remote<Card
     setCardUrls([])
     for (const c of cards) {
       const card = await cardQuery.getCard(c)
-      const url = card.image_uris.normal
+      const url = card.image_uris.border_crop
       setCardUrls(u => u.concat([url]))
     }
   }
   return (
     <>
       <form className="flex w-full" onSubmit={e => handleSubmit(e)}>
-        <Input ref={searchRef} type="search" placeholder="name:goblin type:creature oracle:/create.*token/" />
+        <Input className="bg-gray-300" ref={searchRef} type="search" placeholder="name:goblin type:creature oracle:/create.*token/" />
         <Button type="submit" variant="outline" >
           Search
         </Button>
@@ -52,13 +52,13 @@ function App({ cardQuery }: { cardQuery: Comlink.Remote<CardQuery> }) {
   const [cardUrls, setCardUrls] = react.useState<string[]>([])
   return (
     <>
-      <div className="bg-gray-800">
+      <div className="bg-gray-800 h-screen">
         <div className="pb-4">
           <TitleBar cardQuery={cardQuery} setCardUrls={setCardUrls} />
         </div>
-        <div className="grid grid-cols-3">
+        <div className="flex flex-wrap justify-center" >
           {
-            cardUrls.map(url => <img className="w-80" src={url} />)
+            cardUrls.map(url => <img className="w-80 p-1" src={url} />)
           }
         </div>
       </div>
