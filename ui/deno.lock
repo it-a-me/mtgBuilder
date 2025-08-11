@@ -5,6 +5,7 @@
     "npm:@radix-ui/react-menubar@^1.1.15": "1.1.15_@types+react@19.1.9_@types+react-dom@19.1.7__@types+react@19.1.9_react@19.1.1_react-dom@19.1.1__react@19.1.1",
     "npm:@radix-ui/react-separator@^1.1.7": "1.1.7_@types+react@19.1.9_@types+react-dom@19.1.7__@types+react@19.1.9_react@19.1.1_react-dom@19.1.1__react@19.1.1",
     "npm:@radix-ui/react-slot@^1.2.3": "1.2.3_@types+react@19.1.9_react@19.1.1",
+    "npm:@radix-ui/react-switch@^1.2.5": "1.2.5_@types+react@19.1.9_@types+react-dom@19.1.7__@types+react@19.1.9_react@19.1.1_react-dom@19.1.1__react@19.1.1",
     "npm:@tailwindcss/vite@^4.1.11": "4.1.11_vite@7.0.6__picomatch@4.0.3_@types+node@24.2.0",
     "npm:@types/node@^24.2.0": "24.2.0",
     "npm:@types/react-dom@^19.1.6": "19.1.7_@types+react@19.1.9",
@@ -756,6 +757,26 @@
         "@types/react"
       ]
     },
+    "@radix-ui/react-switch@1.2.5_@types+react@19.1.9_@types+react-dom@19.1.7__@types+react@19.1.9_react@19.1.1_react-dom@19.1.1__react@19.1.1": {
+      "integrity": "sha512-5ijLkak6ZMylXsaImpZ8u4Rlf5grRmoc0p0QeX9VJtlrM4f5m3nCTX8tWga/zOA8PZYIR/t0p2Mnvd7InrJ6yQ==",
+      "dependencies": [
+        "@radix-ui/primitive",
+        "@radix-ui/react-compose-refs",
+        "@radix-ui/react-context",
+        "@radix-ui/react-primitive",
+        "@radix-ui/react-use-controllable-state",
+        "@radix-ui/react-use-previous",
+        "@radix-ui/react-use-size",
+        "@types/react",
+        "@types/react-dom",
+        "react",
+        "react-dom"
+      ],
+      "optionalPeers": [
+        "@types/react",
+        "@types/react-dom"
+      ]
+    },
     "@radix-ui/react-use-callback-ref@1.1.1_@types+react@19.1.9_react@19.1.1": {
       "integrity": "sha512-FkBMwD+qbGQeMu1cOHnuGB6x4yzPjho8ap5WtbEJ26umhgqVXbhekKUQO+hZEL1vU92a3wHwdp0HAcqAUF5iDg==",
       "dependencies": [
@@ -802,6 +823,16 @@
     },
     "@radix-ui/react-use-layout-effect@1.1.1_@types+react@19.1.9_react@19.1.1": {
       "integrity": "sha512-RbJRS4UWQFkzHTTwVymMTUv8EqYhOp8dOOviLj2ugtTiXRaRQS7GLGxZTLL1jWhMeoSCf5zmcZkqTl9IiYfXcQ==",
+      "dependencies": [
+        "@types/react",
+        "react"
+      ],
+      "optionalPeers": [
+        "@types/react"
+      ]
+    },
+    "@radix-ui/react-use-previous@1.1.1_@types+react@19.1.9_react@19.1.1": {
+      "integrity": "sha512-2dHfToCj/pzca2Ck724OZ5L0EVrr3eHRNsG/b3xQJLA2hZpVCS99bLAX+hm1IHXDEnzU6by5z/5MIY794/a8NQ==",
       "dependencies": [
         "@types/react",
         "react"
@@ -2196,6 +2227,7 @@
         "npm:@radix-ui/react-menubar@^1.1.15",
         "npm:@radix-ui/react-separator@^1.1.7",
         "npm:@radix-ui/react-slot@^1.2.3",
+        "npm:@radix-ui/react-switch@^1.2.5",
         "npm:@tailwindcss/vite@^4.1.11",
         "npm:@types/node@^24.2.0",
         "npm:@types/react-dom@^19.1.6",
