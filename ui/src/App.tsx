@@ -1,12 +1,14 @@
 import { Menubar } from "@/components/ui/menubar";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
-import * as Comlink from "comlink"
-import type CardQuery from "./workers/cardQuery";
-import react from "react";
+import react, { useContext } from "react";
+import { CardContext } from "./cardQuery";
+import { Switch } from "./components/ui/switch";
 
-function CardSearch({ cardQuery, setCardUrls }: { cardQuery: Comlink.Remote<CardQuery>, setCardUrls: react.Dispatch<react.SetStateAction<string[]>> }) {
+function CardSearch({ setDisplayCards }: { setDisplayCards: react.Dispatch<react.SetStateAction<number[]>> }) {
   const searchRef = react.useRef<HTMLInputElement>(null)
+  const [liveSearch, setLiveSearch] = react.useState(false)
+  const cardQuery = useContext(CardContext)
   async function handleSubmit(e: react.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const query = searchRef.current?.value
@@ -15,19 +17,17 @@ function CardSearch({ cardQuery, setCardUrls }: { cardQuery: Comlink.Remote<Card
       return
     }
     const cards = await cardQuery.queryCards(query)
-    cards.length = Math.min(cards.length, 30)
-    setCardUrls([])
-    for (const c of cards) {
-      const card = await cardQuery.getCard(c)
-      const url = card.image_uris.border_crop
-      setCardUrls(u => u.concat([url]))
-    }
+    setDisplayCards(cards)
   }
   return (
     <>
-      <form className="flex w-full" onSubmit={e => handleSubmit(e)}>
+      <form className="flex w-full" onSubmit={e => handleSubmit(e)} onChange={e => liveSearch && handleSubmit(e)}>
         <Input className="bg-gray-300" ref={searchRef} type="search" placeholder="name:goblin type:creature oracle:/create.*token/" />
-        <Button type="submit" variant="outline" >
+        <div className="flex items-center px-1">
+          <p>Live</p>
+          <Switch checked={liveSearch} onCheckedChange={() => setLiveSearch(v => !v)} className="flex" ></Switch>
+        </div>
+        <Button className="bg-gray-200" type="submit" variant="outline" >
           Search
         </Button>
       </form>
@@ -35,30 +35,61 @@ function CardSearch({ cardQuery, setCardUrls }: { cardQuery: Comlink.Remote<Card
   );
 }
 
-function TitleBar({ cardQuery, setCardUrls }: { cardQuery: Comlink.Remote<CardQuery>, setCardUrls: react.Dispatch<react.SetStateAction<string[]>> }) {
+function TitleBar({ setDisplayCards }: { setDisplayCards: react.Dispatch<react.SetStateAction<number[]>> }) {
   return (
     <>
       <Menubar className="pl-0">
         <Button className="bg-blue-300 hover:bg-blue-400 text-gray-800 font-bold" asChild>
           <a href="/">MtgBuilder</a>
         </Button>
-        <CardSearch cardQuery={cardQuery} setCardUrls={setCardUrls} />
+        <CardSearch setDisplayCards={setDisplayCards} />
       </Menubar >
     </>
   );
 }
 
-function App({ cardQuery }: { cardQuery: Comlink.Remote<CardQuery> }) {
-  const [cardUrls, setCardUrls] = react.useState<string[]>([])
+function Card({ id, className }: { id: number, className?: string }) {
+  const cardQuery = useContext(CardContext)
+  const [card, setCard] = react.useState<{ imageUrl: string, cardUrl: string } | null>(null)
+  react.useEffect(() => {
+    let isMounted = true
+    async function getCardUrl() {
+      const card = await cardQuery.getCard(id)
+      if (isMounted) {
+        setCard({
+          imageUrl: card.image_uris.border_crop.toString(),
+          cardUrl: card.scryfall_uri.toString()
+        })
+      }
+    }
+    getCardUrl()
+    return () => { isMounted = false }
+  });
+  return (<>
+    {card != null && <a href={card.cardUrl} target="_blank">
+      <img className={className} src={card.imageUrl} />
+    </a>}
+  </>)
+}
+
+function App() {
+  const [displayCards, setDisplayCards] = react.useState<number[]>([])
+  const MAX_CARDS = 30
   return (
     <>
       <div className="bg-gray-800 h-screen">
-        <div className="pb-4">
-          <TitleBar cardQuery={cardQuery} setCardUrls={setCardUrls} />
+        <div>
+          <TitleBar setDisplayCards={setDisplayCards} />
         </div>
+        {
+          displayCards.length > 0 &&
+          <h1 className="text-white p-4 font-bold">
+            Displaying {Math.min(MAX_CARDS, displayCards.length)}/{displayCards.length}
+          </h1>
+        }
         <div className="flex flex-wrap justify-center" >
           {
-            cardUrls.map(url => <img key={url} className="w-80 p-1" src={url} />)
+            displayCards.slice(0, MAX_CARDS).map(c => <Card className="w-80 p-2" key={c} id={c} />)
           }
         </div>
       </div>
