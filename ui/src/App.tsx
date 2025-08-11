@@ -77,7 +77,7 @@ function App() {
   const MAX_CARDS = 30
   return (
     <>
-      <div className="bg-gray-800 h-full">
+      <div className="bg-gray-800 h-full min-h-screen">
         <div>
           <TitleBar setDisplayCards={setDisplayCards} />
         </div>
