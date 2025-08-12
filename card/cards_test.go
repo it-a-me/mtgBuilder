@@ -2,11 +2,13 @@ package card_test
 
 import (
 	_ "embed"
-	"encoding/json"
+	// "encoding/json"
 	"errors"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/goccy/go-json"
 
 	"mtgBuilder/card"
 	"mtgBuilder/fetch"

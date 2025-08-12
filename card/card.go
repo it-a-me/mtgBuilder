@@ -180,7 +180,7 @@ type Card struct {
 	Toughness *string `json:"toughness,omitempty"`
 
 	// The type line of this card.
-	TypeLine string `json:"type_line,omitzero"`
+	TypeLine string `json:"type_line,omitempty"`
 }
 
 type PrintFields struct {
