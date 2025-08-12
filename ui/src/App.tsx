@@ -1,8 +1,8 @@
 import { Menubar } from "@/components/ui/menubar";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
-import react, { useContext } from "react";
-import { CardContext } from "./cardQuery";
+import react, { Suspense, useContext } from "react";
+import { CardContext, CardsReady } from "./cardQuery";
 import { Switch } from "./components/ui/switch";
 
 function CardSearch({ setDisplayCards }: { setDisplayCards: react.Dispatch<react.SetStateAction<number[]>> }) {
@@ -72,26 +72,34 @@ function Card({ id, className }: { id: number, className?: string }) {
   </>)
 }
 
+function Body({ displayCards }: { displayCards: number[] }) {
+  react.use(CardsReady)
+  const MAX_CARDS = 30
+
+  return <>{
+    displayCards.length > 0 &&
+    <h1 className="text-white p-4 font-bold">
+      Displaying {Math.min(MAX_CARDS, displayCards.length)}/{displayCards.length}
+    </h1>
+  }
+    < div className="flex flex-wrap justify-center" >
+      {
+        displayCards.slice(0, MAX_CARDS).map(c => <Card className="w-80 p-2" key={c} id={c} />)
+      }
+    </div ></>
+}
+
 function App() {
   const [displayCards, setDisplayCards] = react.useState<number[]>([])
-  const MAX_CARDS = 30
   return (
     <>
       <div className="bg-gray-800 h-full min-h-screen">
         <div>
           <TitleBar setDisplayCards={setDisplayCards} />
         </div>
-        {
-          displayCards.length > 0 &&
-          <h1 className="text-white p-4 font-bold">
-            Displaying {Math.min(MAX_CARDS, displayCards.length)}/{displayCards.length}
-          </h1>
-        }
-        <div className="flex flex-wrap justify-center" >
-          {
-            displayCards.slice(0, MAX_CARDS).map(c => <Card className="w-80 p-2" key={c} id={c} />)
-          }
-        </div>
+        <Suspense fallback=<h1 className="text-white text-2xl p-3">Loading Cards...</h1>>
+          <Body displayCards={displayCards} />
+        </Suspense>
       </div>
     </>
   );
