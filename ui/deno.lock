@@ -11,6 +11,7 @@
     "npm:@types/react-dom@^19.1.6": "19.1.7_@types+react@19.1.9",
     "npm:@types/react@^19.1.8": "19.1.9",
     "npm:@vitejs/plugin-react@^4.6.0": "4.7.0_vite@7.0.6__picomatch@4.0.3_@babel+core@7.28.0_@types+node@24.2.0",
+    "npm:babel-plugin-react-compiler@^19.1.0-rc.2": "19.1.0-rc.2",
     "npm:class-variance-authority@~0.7.1": "0.7.1",
     "npm:clsx@^2.1.1": "2.1.1",
     "npm:comlink@^4.4.2": "4.4.2",
@@ -1311,6 +1312,12 @@
         "tslib"
       ]
     },
+    "babel-plugin-react-compiler@19.1.0-rc.2": {
+      "integrity": "sha512-kSNA//p5fMO6ypG8EkEVPIqAjwIXm5tMjfD1XRPL/sRjYSbJ6UsvORfaeolNWnZ9n310aM0xJP7peW26BuCVzA==",
+      "dependencies": [
+        "@babel/types"
+      ]
+    },
     "balanced-match@1.0.2": {
       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="
     },
@@ -2233,6 +2240,7 @@
         "npm:@types/react-dom@^19.1.6",
         "npm:@types/react@^19.1.8",
         "npm:@vitejs/plugin-react@^4.6.0",
+        "npm:babel-plugin-react-compiler@^19.1.0-rc.2",
         "npm:class-variance-authority@~0.7.1",
         "npm:clsx@^2.1.1",
         "npm:comlink@^4.4.2",
