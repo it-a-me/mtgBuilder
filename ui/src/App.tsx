@@ -22,12 +22,12 @@ function CardSearch({ setDisplayCards }: { setDisplayCards: react.Dispatch<react
   return (
     <>
       <form className="flex w-full" onSubmit={e => handleSubmit(e)} onChange={e => liveSearch && handleSubmit(e)}>
-        <Input className="bg-gray-300" ref={searchRef} type="search" placeholder="name:goblin type:creature oracle:/create.*token/" />
+        <Input className="bg-gray-300 text-xl" ref={searchRef} type="search" placeholder="name:goblin type:creature oracle:/create.*token/" />
         <div className="flex items-center px-1">
-          <p>Live</p>
+          <p className="text-xl">Live</p>
           <Switch checked={liveSearch} onCheckedChange={() => setLiveSearch(v => !v)} className="flex" ></Switch>
         </div>
-        <Button className="bg-gray-200" type="submit" variant="outline" >
+        <Button className="bg-gray-200 text-xl" type="submit" variant="outline" >
           Search
         </Button>
       </form>
@@ -38,8 +38,8 @@ function CardSearch({ setDisplayCards }: { setDisplayCards: react.Dispatch<react
 function TitleBar({ setDisplayCards }: { setDisplayCards: react.Dispatch<react.SetStateAction<number[]>> }) {
   return (
     <>
-      <Menubar className="pl-0">
-        <Button className="bg-blue-300 hover:bg-blue-400 text-gray-800 font-bold" asChild>
+      <Menubar className="p-0">
+        <Button className="bg-blue-300 hover:bg-blue-400 text-xl text-gray-800 font-bold" asChild>
           <a href="/">MtgBuilder</a>
         </Button>
         <CardSearch setDisplayCards={setDisplayCards} />
@@ -92,7 +92,7 @@ function Body({ displayCards }: { displayCards: number[] }) {
 
   return <>
     <div className="flex items-center justify-between p-1">
-      <h1 className="text-white font-bold">
+      <h1 className="text-white text-xl font-bold">
         Displaying {startIndex}-{endIndex} of {displayCards.length} matching cards
       </h1>
       <div>
@@ -108,7 +108,7 @@ function Body({ displayCards }: { displayCards: number[] }) {
       {
         displayCards.slice(startIndex, startIndex + MAX_CARDS).map(id =>
           <Suspense key={id}>
-            <Card className="w-80 p-2" getCard={cardQuery.getCard(id)} />
+            <Card className="w-100 p-2" getCard={cardQuery.getCard(id)} />
           </Suspense>)
       }
     </div ></>
