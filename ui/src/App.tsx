@@ -48,32 +48,41 @@ function TitleBar({ setDisplayCards }: { setDisplayCards: react.Dispatch<react.S
   );
 }
 
-function Card({ id, className }: { id: number, className?: string }) {
-  const cardQuery = useContext(CardContext)
-  const [card, setCard] = react.useState<{ imageUrl: string, cardUrl: string } | null>(null)
-  react.useEffect(() => {
-    let isMounted = true
-    async function getCardUrl() {
-      const card = await cardQuery.getCard(id)
-      if (isMounted) {
-        setCard({
-          imageUrl: card.image_uris.border_crop.toString(),
-          cardUrl: card.scryfall_uri.toString()
-        })
-      }
+function Card({ getCard: cardPromise, className }: { getCard: Promise<object>, className?: string }) {
+  const card = react.use(cardPromise)
+
+  let name, imageUrl, cardUrl;
+  try {
+    //@ts-expect-error Untyped value
+    name = card.name
+    //@ts-expect-error Untyped value
+    cardUrl = card.scryfall_uri
+    //@ts-expect-error Untyped value
+    imageUrl = card.image_uris.border_crop
+  }
+  catch (e) {
+    if (e instanceof TypeError) {
+      return <>
+        <a href={cardUrl} className={className} title={name}>
+          <h1 className="bg-white text-red-500 text-2xl h-full px-4 py-2">
+            {name} has no associated image
+          </h1>
+        </a>
+      </>
     }
-    getCardUrl()
-    return () => { isMounted = false }
-  });
+    throw e
+  }
+
   return (<>
-    {card != null && <a href={card.cardUrl} target="_blank">
-      <img className={className} src={card.imageUrl} />
+    {card != null && <a href={cardUrl} target="_blank">
+      <img className={className} src={imageUrl} title={name} />
     </a>}
   </>)
 }
 
 function Body({ displayCards }: { displayCards: number[] }) {
   react.use(CardsReady)
+  const cardQuery = useContext(CardContext)
   const MAX_CARDS = 30
 
   return <>{
@@ -84,7 +93,10 @@ function Body({ displayCards }: { displayCards: number[] }) {
   }
     < div className="flex flex-wrap justify-center" >
       {
-        displayCards.slice(0, MAX_CARDS).map(c => <Card className="w-80 p-2" key={c} id={c} />)
+        displayCards.slice(0, MAX_CARDS).map(id =>
+          <Suspense key={id}>
+            <Card className="w-80 p-2" getCard={cardQuery.getCard(id)} />
+          </Suspense>)
       }
     </div ></>
 }
