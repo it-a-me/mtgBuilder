@@ -1,13 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"slices"
 	"syscall/js"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"mtgBuilder/card"
 	"mtgBuilder/query"
@@ -37,7 +38,7 @@ func feedCards(_ js.Value, args []js.Value) any {
 	if err := CheckArgs(args, []js.Type{js.TypeString}); err != nil {
 		return NewError(err)
 	}
-	
+
 	start := time.Now()
 
 	var c []card.Card
