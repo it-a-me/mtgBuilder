@@ -81,19 +81,32 @@ function Card({ getCard: cardPromise, className }: { getCard: Promise<object>, c
 }
 
 function Body({ displayCards }: { displayCards: number[] }) {
+  const MAX_CARDS = 60
   react.use(CardsReady)
   const cardQuery = useContext(CardContext)
-  const MAX_CARDS = 30
+  const [page, setPage] = react.useState<number>(0)
+  react.useEffect(() => setPage(0), [displayCards])
+  const startIndex = page * MAX_CARDS
+  const endIndex = Math.min(page * MAX_CARDS + MAX_CARDS, displayCards.length)
+  const lastPage = Math.max(0, Math.trunc(displayCards.length / MAX_CARDS))
 
-  return <>{
-    displayCards.length > 0 &&
-    <h1 className="text-white p-4 font-bold">
-      Displaying {Math.min(MAX_CARDS, displayCards.length)}/{displayCards.length}
-    </h1>
-  }
-    < div className="flex flex-wrap justify-center" >
+  return <>
+    <div className="flex items-center justify-between p-1">
+      <h1 className="text-white font-bold">
+        Displaying {startIndex}-{endIndex} of {displayCards.length} matching cards
+      </h1>
+      <div>
+        <Button className="mx-1" variant="outline" onClick={() => setPage(p => Math.max(p - 1, 0))}>
+          Previous
+        </Button>
+        <Button className="mx-1" variant="outline" onClick={() => setPage(p => Math.min(p + 1, lastPage))}>
+          Next
+        </Button>
+      </div>
+    </div>
+    <div className="flex flex-wrap justify-center" >
       {
-        displayCards.slice(0, MAX_CARDS).map(id =>
+        displayCards.slice(startIndex, startIndex + MAX_CARDS).map(id =>
           <Suspense key={id}>
             <Card className="w-80 p-2" getCard={cardQuery.getCard(id)} />
           </Suspense>)
