@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"slices"
 	"syscall/js"
 	"time"
@@ -31,23 +33,60 @@ func CheckArgs(args []js.Value, expected []js.Type) error {
 	return nil
 }
 
+func NewPromise(global js.Value, f func() (any, error)) js.Value {
+	typePromise := global.Get("Promise")
+	return typePromise.New(js.FuncOf(func(g js.Value, args []js.Value) any {
+		log.Printf("NewPromise invoked with %+v", args)
+		resolve := args[0]
+		reject := args[1]
+		go func() {
+			v, err := f()
+			_ = v
+			if err != nil {
+				reject.Invoke(NewError(err))
+			}
+			resolve.Invoke(nil)
+		}()
+		return nil
+	}))
+}
+
+func WrapAsync(global js.Value, f func(global js.Value, args []js.Value) (any, error)) js.Func {
+	return js.FuncOf(func(_ js.Value, args []js.Value) any {
+		return NewPromise(global, func() (any, error) {
+			return f(global, args)
+		})
+	})
+}
+
 var cards []card.Card
 
-func feedCards(_ js.Value, args []js.Value) any {
+func feedCards(g js.Value, args []js.Value) (any, error) {
 	log.Println("feeding cards")
 	if err := CheckArgs(args, []js.Type{js.TypeString}); err != nil {
-		return NewError(err)
+		return nil, err
+	}
+	url := args[0].String()
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	start := time.Now()
 
 	var c []card.Card
-	if err := json.Unmarshal([]byte(args[0].String()), &c); err != nil {
-		return NewError(err)
+	if err := json.Unmarshal(bytes, &c); err != nil {
+		return nil, err
 	}
 	log.Printf("parsed cards.json in %s", time.Since(start).String())
 	cards = c
-	return nil
+	return nil, nil
 }
 
 func parseQuery(_ js.Value, args []js.Value) any {
@@ -106,7 +145,7 @@ const exportName = "GO_cardQuery"
 func main() {
 	g := js.Global()
 	exports := map[string]any{
-		"feedCards":  js.FuncOf(feedCards),
+		"feedCards":  WrapAsync(g, feedCards),
 		"parseQuery": js.FuncOf(parseQuery),
 		"queryCards": js.FuncOf(queryCards),
 		"getCard":    js.FuncOf(getCard),
