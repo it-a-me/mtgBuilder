@@ -20,10 +20,8 @@ export default class CardQuery {
     await this._init()
     console.log("initialized")
     // @ts-expect-error untyped value
-    const res = self.GO_cardQuery.feedCards(cardsJson)
-    if (res instanceof (Error)) {
-      throw res
-    }
+    const res = await self.GO_cardQuery.feedCards(cardsJson)
+    console.log(await await res)
     if (res == null) {
       return
     }

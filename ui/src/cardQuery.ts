@@ -6,10 +6,9 @@ const w = new Worker(new URL("./workers/cardQuery", import.meta.url), { type: "m
 const cardQuery = Comlink.wrap<CardQuery>(w);
 
 export const CardsReady = (async () => {
-  const cardsJson = await fetch(new URL("/cards.json", import.meta.url)).then(r => r.text())
-  console.log("fetched cards")
-  await cardQuery.feedCards(cardsJson)
-  console.log("fed cards")
+  const start = performance.now()
+  await cardQuery.feedCards(new URL("/cards.json", import.meta.url).toString())
+  console.log(`fed cards in ${performance.now() - start}ms`)
 })()
 
 export const CardContext = createContext(cardQuery)
