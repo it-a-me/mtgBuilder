@@ -301,3 +301,36 @@ func ReflectAll(t *testing.T) {
 		t.Errorf("json roundtrip mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func getAllCardsJSON() ([][]byte, error) {
+	b, err := os.ReadFile("testdata/cards.json")
+	if err != nil {
+		return nil, err
+	}
+	var cards []any
+	if err := json.Unmarshal(b, &cards); err != nil {
+		return nil, err
+	}
+	cardsJSON := make([][]byte, len(cards))
+	for i, c := range cards {
+		cardsJSON[i], err = json.Marshal(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return cardsJSON, nil
+}
+
+func BenchmarkUnmarshal(b *testing.B) {
+	cardsJSON, err := getAllCardsJSON()
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	for i := 0; b.Loop(); i = (i + 1) % len(cardsJSON) {
+		var c card.Card
+		if err := json.Unmarshal(cardsJSON[i], &c); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
