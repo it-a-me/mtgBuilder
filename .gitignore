@@ -1,3 +1,7 @@
 cards.json
 cards.bin
 /out
+
+# go profiling
+cpu.out
+mem.out
