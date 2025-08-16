@@ -19,12 +19,18 @@ build-wasm:
   GOOS=js GOARCH=wasm go build
   cp wasmlib ../ui/public/wasmlib.wasm
 
+[working-directory: 'wasmlib']
+build-wasm-release:
+  GOOS=js GOARCH=wasm go build
+  wasm-opt wasmlib -all -O3 -o wasmlib-opt
+  cp wasmlib-opt ../ui/public/wasmlib.wasm
+
 [working-directory: 'ui']
 build: download-deps fetch-cards build-wasm
   deno run build
 
 [working-directory: 'ui']
-build-gh: download-deps fetch-cards build-wasm
+build-gh: download-deps fetch-cards build-wasm-release
   deno run build-gh
 
 [working-directory: 'ui']
