@@ -2,9 +2,9 @@ package card_test
 
 import (
 	_ "embed"
+	"sync"
 	// "encoding/json"
 	"errors"
-	"log"
 	"os"
 	"testing"
 
@@ -33,6 +33,14 @@ func init() {
 			panic(err)
 		}
 	}
+}
+
+func readFileHelper(t testing.TB, file string) []byte {
+	content, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatalf("failed to read file %s: %s", file, err)
+	}
+	return content
 }
 
 func TestUnmarshalNissa(t *testing.T) {
@@ -200,50 +208,49 @@ func TestUnmarshalNissa(t *testing.T) {
 		TypeLine:     "Legendary Creature — Elf Druid",
 	}
 
-	content, err := os.ReadFile("testdata/nissa.json")
-	if err != nil {
+	content := readFileHelper(t, "testdata/nissa.json")
+
+	var got card.Card
+	if err := json.Unmarshal(content, &got); err != nil {
 		t.Fatal(err)
 	}
-	var got card.Card
-	err = json.Unmarshal(content, &got)
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("want != got; -want +got\n%s", diff)
 	}
 }
 
 func TestReflectAll(t *testing.T) {
-	if !t.Run("Layout", ReflectLayout) {
+	if !t.Run("ReflectLayout", ReflectLayout) {
 		return
 	}
-	t.Run("Layout", ReflectAll)
+	t.Run("ReflectAll", ReflectAll)
 }
 
 func ReflectLayout(t *testing.T) {
 	cards := []string{"double_faced.json", "flip.json", "mdf.json", "nissa.json", "reversible.json", "split.json"}
 	for _, c := range cards {
-		content, err := os.ReadFile("testdata/" + c)
-		if err != nil {
-			t.Fatalf("failed to read %s: %s", c, err)
-		}
+		content := readFileHelper(t, "testdata/"+c)
+
 		var parsed card.Card
-		err = json.Unmarshal(content, &parsed)
-		if err != nil {
+		if err := json.Unmarshal(content, &parsed); err != nil {
 			t.Fatalf("failed to unmarshal %s into card: %s", c, err)
 		}
+
 		marshaled, err := json.Marshal(parsed)
 		if err != nil {
 			t.Fatalf("failed to marshal %s: %s", c, err)
 		}
+
 		var expected, got map[string]any
 		if err := json.Unmarshal(content, &expected); err != nil {
 			t.Fatalf("failed to unmarshal %s: %s", c, err)
 		}
+
 		if err := json.Unmarshal(marshaled, &got); err != nil {
 			t.Fatalf("failed to unmarshal parsed card %s: %s", c, err)
 		}
+
 		if diff := cmp.Diff(expected, got); diff != "" {
 			t.Errorf("json roundtrip mismatch (-want +got):\n%s", diff)
 		}
@@ -252,14 +259,12 @@ func ReflectLayout(t *testing.T) {
 }
 
 func TestUnmarshalAll(t *testing.T) {
-	p := "testdata/cards.json"
-	content, err := os.ReadFile(p)
-	if err != nil {
-		t.Fatalf("failed to read file %s:%s", p, err)
+	if testing.Short() {
+		t.SkipNow()
 	}
+	content := readFileHelper(t, "testdata/cards.json")
 	var cards []card.Card
-	err = json.Unmarshal(content, &cards)
-	if err != nil {
+	if err := json.Unmarshal(content, &cards); err != nil {
 		t.Fatalf("failed to unmarshal all cards: %s", err)
 	}
 }
@@ -268,41 +273,39 @@ func ReflectAll(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}
-	p := "testdata/cards.json"
-	content, err := os.ReadFile(p)
+
+	allCards, err := getAllCardJSONAny()
 	if err != nil {
-		t.Fatalf("failed to read file %s:%s", p, err)
+		t.Fatal(err)
 	}
-	var roundtrip []any
-	var got []byte
-	{
-		var cards []card.Card
-		err = json.Unmarshal(content, &cards)
-		if err != nil {
-			t.Fatalf("failed to unmarshal all cards to []card.Card: %s", err)
+	for i, cja := range allCards {
+		var c card.Card
+		if err := json.Unmarshal(cja.JSON, &c); err != nil {
+			t.Fatal(err)
 		}
-		got, err = json.MarshalIndent(cards, "", "  ")
+
+		roundtrippedJSON, err := json.Marshal(c)
 		if err != nil {
-			t.Fatalf("failed to unmarshal all cards from []card.Card to map[string]string: %s", err)
+			t.Fatal(err)
 		}
-		err = json.Unmarshal(got, &roundtrip)
-		if err != nil {
-			t.Fatalf("failed to unmarshal all cards from []card.Card to map[string]string: %s", err)
+
+		var roundtripped any
+		if err := json.Unmarshal(roundtrippedJSON, &roundtripped); err != nil {
+			t.Fatal(err)
 		}
-	}
-	var expected []any
-	{
-		err = json.Unmarshal(content, &expected)
-		if err != nil {
-			t.Fatalf("failed to unmarshal all cards to map[string]string: %s", err)
+
+		if diff := cmp.Diff(cja.Card, roundtripped); diff != "" {
+			t.Fatalf("json roundtrip mismatch on card %d (-want +got):\n%s", i, diff)
 		}
-	}
-	if diff := cmp.Diff(expected, roundtrip); diff != "" {
-		t.Errorf("json roundtrip mismatch (-want +got):\n%s", diff)
 	}
 }
 
-func getAllCardsJSON() ([][]byte, error) {
+type CardJSONAny struct {
+	Card any
+	JSON []byte
+}
+
+var getAllCardJSONAny = sync.OnceValues(func() ([]CardJSONAny, error) {
 	b, err := os.ReadFile("testdata/cards.json")
 	if err != nil {
 		return nil, err
@@ -311,26 +314,34 @@ func getAllCardsJSON() ([][]byte, error) {
 	if err := json.Unmarshal(b, &cards); err != nil {
 		return nil, err
 	}
+	cardJSONAnys := make([]CardJSONAny, len(cards))
+	for i := range cards {
+		j, err := json.Marshal(cards[i])
+		if err != nil {
+			panic(err)
+		}
+		cardJSONAnys[i] = CardJSONAny{cards[i], j}
+	}
+	return cardJSONAnys, nil
+})
+
+func BenchmarkUnmarshal(b *testing.B) {
+	cards, err := getAllCardJSONAny()
+	if err != nil {
+		b.Fatal(err)
+	}
 	cardsJSON := make([][]byte, len(cards))
 	for i, c := range cards {
 		cardsJSON[i], err = json.Marshal(c)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 	}
-	return cardsJSON, nil
-}
-
-func BenchmarkUnmarshal(b *testing.B) {
-	cardsJSON, err := getAllCardsJSON()
-	if err != nil {
-		b.Fatal(err)
-	}
 	b.ReportAllocs()
-	for i := 0; b.Loop(); i = (i + 1) % len(cardsJSON) {
+	for i := 0; b.Loop(); i = (i + 1) % len(cards) {
 		var c card.Card
 		if err := json.Unmarshal(cardsJSON[i], &c); err != nil {
-			log.Fatal(err)
+			b.Fatal(err)
 		}
 	}
 }
