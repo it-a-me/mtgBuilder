@@ -21,7 +21,7 @@ build-wasm:
 
 [working-directory: 'wasmlib']
 build-wasm-release:
-  GOOS=js GOARCH=wasm GOEXPERIMENT=jsonv2 go build
+  GOOS=js GOARCH=wasm GOEXPERIMENT=jsonv2 go build -buildvcs=false
   wasm-opt wasmlib -all -O3 -o wasmlib-opt
   cp wasmlib-opt ../ui/public/wasmlib.wasm
 
